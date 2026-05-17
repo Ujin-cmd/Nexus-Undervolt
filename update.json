@@ -1,6 +1,6 @@
 {
-    "version":  "v3.2",
-    "versionCode":  30002,
-    "zipUrl":  "https://github.com/Ujin-cmd/Nexus-Undervolt/releases/download/v3.2/Nexus_Undervolt_v3.2.zip",
+    "version":  "v3.3",
+    "versionCode":  30003,
+    "zipUrl":  "https://github.com/Ujin-cmd/Nexus-Undervolt/releases/download/v3.3/Nexus_Undervolt_v3.3.zip",
     "changelog":  "https://raw.githubusercontent.com/Ujin-cmd/Nexus-Undervolt/main/changelog.md"
 }
