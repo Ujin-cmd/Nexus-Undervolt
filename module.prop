@@ -1,0 +1,7 @@
+id=Undervolting
+name=Nexus Undervolting
+version=3.0
+versionCode=30000
+author=Ujin
+description=Advanced Kernel Modulation Matrix with AI Auto-Tune and Live Telemetry.
+updateJson=https://raw.githubusercontent.com/Ujin-cmd/Nexus-Undervolt/main/update.json

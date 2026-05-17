@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Kernel Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #070709;
+            --card-bg: rgba(20, 20, 24, 0.4);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f0f5;
+            --text-muted: #8e8e99;
+            --accent: #00e5ff;
+            --accent-glow: rgba(0, 229, 255, 0.4);
+            --success: #00ff88;
+            --danger: #ff3366;
+            --surface: #141418;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(255, 51, 102, 0.03) 0%, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            padding: 24px;
+            padding-bottom: 60px;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-top: 10px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #fff 0%, #a5a5b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255,255,255,0.1);
+        }
+
+        p.subtitle {
+            color: var(--accent);
+            font-size: 0.75rem;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .row:last-child { margin-bottom: 0; }
+        
+        .label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .val {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        
+        .green { color: var(--success); text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+        .red { color: var(--danger); text-shadow: 0 0 10px rgba(255,51,102,0.3); }
+        .accent { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
+
+        .slider-wrap { margin-bottom: 24px; }
+        .slider-wrap:last-child { margin-bottom: 0; }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 6px;
+            background: var(--surface);
+            outline: none;
+            position: relative;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow), 0 0 5px var(--accent) inset;
+            cursor: pointer;
+            border: 2px solid #fff;
+            transition: transform 0.1s;
+        }
+        
+        .custom-select {
+            width: 100%;
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            padding: 14px;
+            border-radius: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+            font-size: 0.9rem;
+        }
+
+        .terminal {
+            background: #000;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            border: 1px solid var(--card-border);
+            min-height: 120px;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 10px;
+            color: var(--text-muted);
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.5);
+            line-height: 1.5;
+        }
+
+        .btn {
+            padding: 18px;
+            border-radius: 16px;
+            border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            letter-spacing: 0.5px;
+        }
+        .btn:active { transform: scale(0.96); }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn-primary {
+            background: var(--text-main);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+        }
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+        }
+        .btn-danger {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+        }
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent) 0%, #0099ff 100%);
+            color: #000;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: 20px 0;
+            position: relative;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NEXUS</h1>
+        <p class="subtitle">Kernel Modulation Matrix</p>
+    </header>
+
+    <!-- TELEMETRY CARD -->
+    <div class="card" style="border-color: rgba(0, 255, 136, 0.2); box-shadow: 0 8px 32px rgba(0, 255, 136, 0.05);">
+        <div class="row" style="margin-bottom: 20px;">
+            <span class="label">Live Telemetry</span>
+            <span class="val green mono" style="font-size:0.75rem; border: 1px solid var(--success); border-radius: 20px; padding: 2px 8px;">ONLINE</span>
+        </div>
+        <div class="row">
+            <span class="label">CPU Core Frequency</span>
+            <span class="val mono" id="tel_cpu_freq" style="color: #fff;">... MHz</span>
+        </div>
+        <div class="row">
+            <span class="label">CPU Thermal State</span>
+            <span class="val mono" id="tel_cpu_temp" style="color: var(--text-main);">... °C</span>
+        </div>
+        <div class="row">
+            <span class="label">GPU Thermal State</span>
+            <span class="val mono" id="tel_gpu_temp" style="color: var(--text-main);">... °C</span>
+        </div>
+    </div>
+
+    <!-- SYSTEM CARD -->
+    <div class="card">
+        <div class="row">
+            <span class="label">SoC Hardware</span>
+            <span class="val mono" id="soc" style="color: var(--accent);">Scanning...</span>
+        </div>
+        <div class="divider"></div>
+        <div id="dynamic-eem" style="margin-bottom: 20px;">
+            <div class="row">
+                <span class="label">Hardware EEM Nodes</span>
+                <span class="val mono" style="color: var(--text-muted);">Scanning...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- THERMAL KNOBS -->
+    <div class="card">
+        <div class="slider-wrap">
+            <div class="slider-header">
+                <span class="label" style="font-size: 0.85rem;">CPU V-Core Offset</span>
+                <span class="val accent mono" id="cpu_val">0</span>
+            </div>
+            <input type="range" id="cpu_slider" min="-50" max="10" value="0">
+        </div>
+
+        <div class="slider-wrap">
+            <div class="slider-header">
+                <span class="label" style="font-size: 0.85rem;">GPU V-Core Offset</span>
+                <span class="val accent mono" id="gpu_val">0</span>
+            </div>
+            <input type="range" id="gpu_slider" min="-20" max="5" value="0">
+        </div>
+        
+        <div class="divider"></div>
+
+        <div class="slider-wrap">
+            <div class="slider-header">
+                <span class="label" style="font-size: 0.85rem;">Thermal Throttle Threshold</span>
+                <span class="val accent mono" id="therm_val">70°C</span>
+            </div>
+            <input type="range" id="therm_slider" min="60" max="95" value="70">
+        </div>
+
+        <div class="slider-wrap" style="margin-bottom: 0;">
+            <div class="slider-header" style="margin-bottom: 8px;">
+                <span class="label" style="font-size: 0.85rem;">CPU Governor</span>
+            </div>
+            <select id="gov_select" class="custom-select">
+                <option value="schedutil">Schedutil (Balanced)</option>
+                <option value="performance">Performance (Max Freq)</option>
+                <option value="powersave">Powersave (Min Freq)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- AUTO-TUNE CARD -->
+    <div class="card" style="border-color: rgba(0, 229, 255, 0.2);">
+        <div class="row">
+            <span class="label">AI Auto-Tune Optimizer</span>
+            <span class="val mono" id="tune-status">IDLE</span>
+        </div>
+        <div class="terminal mono" id="tune-log" style="min-height: 80px; max-height: 100px; margin-top: 5px;">
+            <div>> System Ready.</div>
+        </div>
+        <button class="btn btn-accent" style="width: 100%; margin-top: 16px;" onclick="startTune()" id="tune-btn">Initialize Stratagem</button>
+    </div>
+    
+    <!-- TERMINAL OUT -->
+    <div class="label" style="margin-left: 8px; margin-bottom: 8px;">System Console</div>
+    <div class="terminal mono" id="term"></div>
+
+    <div class="btn-group">
+        <button class="btn btn-secondary" onclick="verify()">Refresh</button>
+        <button class="btn btn-danger" onclick="resetDefaults()">Reset</button>
+        <button class="btn btn-primary" onclick="apply()">Commit</button>
+    </div>
+
+    <script>
+        function logMsg(msg) {
+            const d = new Date();
+            const ts = d.toISOString().substring(11, 19);
+            const term = document.getElementById('term');
+            term.innerHTML += `<div><span style="color:#556;">[${ts}]</span> ${msg}</div>`;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function updateSliders() {
+            document.getElementById('cpu_val').innerText = document.getElementById('cpu_slider').value;
+            document.getElementById('gpu_val').innerText = document.getElementById('gpu_slider').value;
+            document.getElementById('therm_val').innerText = document.getElementById('therm_slider').value + "°C";
+        }
+
+        document.getElementById('cpu_slider').addEventListener('input', updateSliders);
+        document.getElementById('gpu_slider').addEventListener('input', updateSliders);
+        document.getElementById('therm_slider').addEventListener('input', updateSliders);
+
+        function resetDefaults() {
+            document.getElementById('cpu_slider').value = 0;
+            document.getElementById('gpu_slider').value = 0;
+            document.getElementById('therm_slider').value = 65;
+            document.getElementById('gov_select').value = "schedutil";
+            updateSliders();
+            logMsg("Parameters reset. Click 'Commit' to flash.");
+        }
+
+        async function verify() {
+            logMsg("Establishing secure kernel uplink...");
+            try {
+                const res = await fetch('/cgi-bin/info.sh');
+                const data = await res.json();
+                
+                document.getElementById('soc').innerText = data.soc;
+                
+                if(data.detected_eem_nodes && data.detected_eem_nodes.length > 0) {
+                    let eemHtml = '';
+                    data.detected_eem_nodes.forEach(node => {
+                        let hex_id = node.substring(0,4);
+                        eemHtml += `
+                            <div class="row" style="margin-bottom:6px;">
+                                <span class="label" style="text-transform:none; font-size:0.8rem; color:var(--text-main)">[0x${hex_id}] ${node}</span>
+                                <span class="val green mono" style="font-size:0.75rem; border: 1px solid var(--success); border-radius: 20px; padding: 2px 8px;">ONLINE</span>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('dynamic-eem').innerHTML = eemHtml;
+                } else {
+                    document.getElementById('dynamic-eem').innerHTML = '<div class="row"><span class="label">Hardware EEM Nodes</span><span class="val mono red">NONE DETECTED</span></div>';
+                }
+                
+                if(data.actual_cpu_uv !== "N/A" && !isNaN(parseInt(data.actual_cpu_uv))) {
+                    document.getElementById('cpu_slider').value = data.actual_cpu_uv;
+                }
+                if(data.actual_gpu_uv !== "N/A" && !isNaN(parseInt(data.actual_gpu_uv))) {
+                    document.getElementById('gpu_slider').value = data.actual_gpu_uv;
+                }
+                
+                // Select Governor
+                if(data.governor) {
+                    const opts = document.getElementById('gov_select').options;
+                    for(let i=0; i<opts.length; i++) {
+                        if(opts[i].value === data.governor) document.getElementById('gov_select').selectedIndex = i;
+                    }
+                }
+                if(data.thermal_limit) {
+                    document.getElementById('therm_slider').value = data.thermal_limit;
+                }
+
+                updateSliders();
+                logMsg("<span class='green'>Uplink OK. Telemetry synchronized.</span>");
+            } catch(e) {
+                logMsg("<span class='red'>FATAL: Kernel unresponsive.</span> Check HTTPD process.");
+            }
+        }
+
+        async function apply() {
+            logMsg("Injecting settings payload into kernel...");
+            const payload = JSON.stringify({
+                cpu: document.getElementById('cpu_slider').value,
+                gpu: document.getElementById('gpu_slider').value,
+                gov: document.getElementById('gov_select').value,
+                thermal: document.getElementById('therm_slider').value
+            });
+            
+            try {
+                await fetch('/cgi-bin/apply.sh', { method: 'POST', body: payload });
+                logMsg("<span class='accent'>Payload deployed successfully to nodes.</span>");
+                setTimeout(verify, 800);
+            } catch(e) {
+                logMsg("<span class='red'>ERROR: Injection failed.</span>");
+            }
+        }
+
+        // Auto Tune Methods
+        let tuneInterval = null;
+        async function startTune() {
+            if(!confirm("WARNING: Aggressive tuning may reboot device. Continue?")) return;
+            document.getElementById('tune-btn').disabled = true;
+            document.getElementById('tune-status').innerText = 'INITIALIZING';
+            document.getElementById('tune-status').className = 'val mono accent';
+            try {
+                await fetch('/cgi-bin/auto_tune.sh', { method: 'POST' });
+                tuneInterval = setInterval(pollTune, 2000);
+            } catch(e) {
+                document.getElementById('tune-log').innerHTML = "<div class='red'>> Service unavailable.</div>";
+                document.getElementById('tune-btn').disabled = false;
+            }
+        }
+
+        async function pollTune() {
+            try {
+                const res = await fetch('/cgi-bin/tune_status.sh');
+                const data = await res.json();
+                document.getElementById('tune-log').innerHTML = `<div>> ${data.msg}</div>`;
+                document.getElementById('tune-status').innerText = data.status.toUpperCase();
+                
+                if(data.status === 'running') {
+                    document.getElementById('tune-status').style.color = 'var(--accent)';
+                    document.getElementById('cpu_slider').value = data.uv;
+                    updateSliders();
+                } else if(data.status === 'completed') {
+                    clearInterval(tuneInterval);
+                    document.getElementById('tune-status').style.color = 'var(--success)';
+                    document.getElementById('tune-btn').disabled = false;
+                    document.getElementById('tune-btn').innerText = 'Strategy Completed';
+                    verify();
+                }
+            } catch(e) {}
+        }
+
+        // Live Telemetry
+        async function pollTelemetry() {
+            try {
+                const res = await fetch('/cgi-bin/telemetry.sh');
+                const data = await res.json();
+                
+                const cTemp = document.getElementById('tel_cpu_temp');
+                cTemp.innerText = data.cpu_temp + " °C";
+                if(data.cpu_temp > 75) cTemp.style.color = 'var(--danger)';
+                else if(data.cpu_temp > 60) cTemp.style.color = '#ffcc00';
+                else cTemp.style.color = 'var(--success)';
+
+                const gTemp = document.getElementById('tel_gpu_temp');
+                gTemp.innerText = data.gpu_temp + " °C";
+                if(data.gpu_temp > 75) gTemp.style.color = 'var(--danger)';
+                else if(data.gpu_temp > 60) gTemp.style.color = '#ffcc00';
+                else gTemp.style.color = 'var(--success)';
+
+                document.getElementById('tel_cpu_freq').innerText = data.cpu_freq + " MHz";
+            } catch(e) {}
+        }
+
+        // Init
+        verify();
+        pollTune();
+        setInterval(pollTelemetry, 1500); // 1.5s refresh for live telemetry
+    </script>
+</body>
+</html>

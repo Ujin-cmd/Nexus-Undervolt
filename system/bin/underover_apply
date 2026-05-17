@@ -1,0 +1,39 @@
+#!/system/bin/sh
+
+CONF="/data/local/tmp/underover.conf"
+CPU="0"
+GPU="0"
+
+
+if [ -f "$CONF" ]; then
+    . "$CONF"
+fi
+
+echo "Applying CPU UV: $CPU, GPU UV: $GPU"
+
+# Apply Voltages
+for file in "/proc/eem/EEM_DET_B/eem_offset" "/proc/eem/EEM_DET_B_HI/eem_offset" "/proc/eem/EEM_DET_CCI/eem_offset" "/proc/eem/EEM_DET_L/eem_offset"; do
+    if [ -f "$file" ]; then echo "$CPU" > "$file"; fi
+done
+
+if [ -f "/proc/eem/EEM_DET_GPU/eem_offset" ]; then
+    echo "$GPU" > "/proc/eem/EEM_DET_GPU/eem_offset"
+fi
+
+# Apply Governor
+TARGET_GOV=${GOV_CONF:-"schedutil"}
+for cpufreq in /sys/devices/system/cpu/cpu*/cpufreq; do
+    [ -f "$cpufreq/scaling_governor" ] && echo "$TARGET_GOV" > "$cpufreq/scaling_governor" 2>/dev/null
+done
+
+# Apply Thermal Limits
+if [ -n "$THERM_CONF" ]; then
+    THERM_MC=$((THERM_CONF * 1000))
+    for trip in trip_point_0_temp trip_point_1_temp trip_point_2_temp; do
+        for zone in /sys/class/thermal/thermal_zone*; do
+            [ -f "$zone/$trip" ] && echo "$THERM_MC" > "$zone/$trip" 2>/dev/null
+        done
+    done
+fi
+
+echo "Apply script completed."
