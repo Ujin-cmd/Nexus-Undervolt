@@ -22,9 +22,13 @@ fi
 HW=$(grep "Hardware" /proc/cpuinfo | cut -d ":" -f2 | xargs)
 [ -n "$HW" ] && SOC="$SOC [$HW]"
 
-[ -z "$SOC" ] && SOC="Unknown Processing Unit"
-SOC=$(echo "$SOC" | sed 's/mt/MT/g; s/sdm/Snapdragon /g; s/sm/Snapdragon SM/g; s/qcom/Qualcomm/gi')
+[ -z "$SOC" ] && SOC="MediaTek Processing Unit"
+SOC=$(echo "$SOC" | sed 's/mt/MT/g')
 
+ui_print "[*] TARGET ARCHITECTURE: MEDIATEK"
+sleep 0.2
+ui_print "[*] SOC DETECTED: $SOC"
+sleep 0.4
 ui_print "[*] INITIALIZING NEURAL UPLINK..."
 sleep 0.3
 ui_print "[*] HANDSHAKE: ACCEPTED"

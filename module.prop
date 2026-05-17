@@ -1,7 +1,7 @@
 id=Undervolting
 name=Nexus Undervolting
-version=3.3
-versionCode=30003
+version=3.4
+versionCode=30004
 author=Ujin
-description=Advanced Kernel Modulation Matrix with AI Auto-Tune and Live Telemetry.
+description=Professional MediaTek Mobile Undervolting & Thermal Management Subsystem.
 updateJson=https://raw.githubusercontent.com/Ujin-cmd/Nexus-Undervolt/main/update.json

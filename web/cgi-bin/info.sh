@@ -26,7 +26,7 @@ HW=$(grep "Hardware" /proc/cpuinfo | cut -d ":" -f2 | xargs)
 [ -n "$HW" ] && SOC="$SOC [$HW]"
 
 [ -z "$SOC" ] && SOC="Unknown Processing Unit"
-SOC=$(echo "$SOC" | sed 's/mt/MT/g; s/sdm/Snapdragon /g; s/sm/Snapdragon SM/g; s/qcom/Qualcomm/gi')
+SOC=$(echo "$SOC" | sed 's/mt/MT/g')
 
 V_B=$(get_val "/proc/eem/EEM_DET_B/eem_offset")
 V_L=$(get_val "/proc/eem/EEM_DET_L/eem_offset")
