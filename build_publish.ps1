@@ -13,9 +13,21 @@ Write-Host "[1/5] Cleaning up old builds..." -ForegroundColor Cyan
 if (Test-Path $ZipName) { Remove-Item $ZipName -Force }
 
 Write-Host "[2/5] Compressing module payload into $ZipName..." -ForegroundColor Cyan
-# Exclude git stuff, updaters, and meta-files from the module zip payload
-$Files = Get-ChildItem -Exclude .git, update.json, changelog.md, *.ps1, *.zip, .gitignore
-Compress-Archive -Path $Files -DestinationPath $ZipName -Force
+# Copy everything into a temp staging folder so we can zip the folder contents cleanly
+$StagingDir = Join-Path $env:TEMP "NexusBuildStaging"
+if (Test-Path $StagingDir) { Remove-Item $StagingDir -Recurse -Force }
+New-Item -ItemType Directory -Path $StagingDir | Out-Null
+
+$ItemsToProcess = Get-ChildItem -Exclude .git, update.json, changelog.md, *.ps1, *.zip, .gitignore
+foreach ($Item in $ItemsToProcess) {
+    Copy-Item -Path $Item.FullName -Destination $StagingDir -Recurse -Force
+}
+
+# Compress the contents of the staging directory
+Compress-Archive -Path "$StagingDir\*" -DestinationPath $ZipName -Force
+
+# Cleanup staging
+Remove-Item $StagingDir -Recurse -Force
 
 Write-Host "[3/5] Staging and Committing source code to Git..." -ForegroundColor Cyan
 git add .
